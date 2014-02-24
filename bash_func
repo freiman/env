@@ -24,54 +24,57 @@ function hr {
 function create_prompt {
 
     gitpart=""
-    
-    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
 
-	stash=$(git stash list | wc -l)
-	mod=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.M"|wc -l)
-	add=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^A"|wc -l)
-	del=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
-	
-	#git status local vs remote
-	status=$(git status | grep -e "^# Your branch is")
+	if [[ ! "$PWD/" =~ /buildsystem-tags/ ]]; then
 
-	if echo $status | grep 'ahead' > /dev/null ; then
-		num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
-		rstat=" ${AZURE}U:${HYELOW}->${HRED}$num$GREEN"
-	elif echo $status | grep 'behind' > /dev/null ; then
-		num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
-		rstat=" ${AZURE}U:${HYELOW}<-${HRED}$num$GREEN"
-	else
-	    	rstat=""
-	fi
+	    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
 
-	if [ $mod -gt 0 ] ; then 
-	    mod="$HRED$mod$GREEN"
-	else
-	    mod="$NOC$mod$GREEN"
-	fi
+		stash=$(git stash list | wc -l)
+		mod=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.M"|wc -l)
+		add=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^A"|wc -l)
+		del=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
 
-	if [ $add -gt 0 ] ; then 
-	    add="$RED$add$GREEN"
-	else
-	    add="$NOC$add$DARK$GREEN"
-	fi
+		#git status local vs remote
+		status=$(git status | grep -e "^# Your branch is")
 
-	if [ $del -gt 0 ] ; then 
-	    del="$HRED$del$GREEN"
-	else
-	    del="$NOC$del$GREEN"
-	fi
+		if echo $status | grep 'ahead' > /dev/null ; then
+			num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
+			rstat=" ${AZURE}U:${HYELOW}->${HRED}$num$GREEN"
+		elif echo $status | grep 'behind' > /dev/null ; then
+			num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
+			rstat=" ${AZURE}U:${HYELOW}<-${HRED}$num$GREEN"
+		else
+		    	rstat=""
+		fi
 
-	if [ $stash -gt 0 ] ; then 
-	    stash=" ${AZURE}S: $RED$stash$GREEN"
-	else
-	    stash=""
-	fi
+		if [ $mod -gt 0 ] ; then 
+		    mod="$HRED$mod$GREEN"
+		else
+		    mod="$NOC$mod$GREEN"
+		fi
 
-	repo=$(git branch | grep -e "^\*"| awk '{print $2}')
-	gitpart="\n$GREEN(GIT: $HBLUE$repo$GREEN | M: $mod A: $add D: $del$stash$rstat)"
+		if [ $add -gt 0 ] ; then 
+		    add="$RED$add$GREEN"
+		else
+		    add="$NOC$add$DARK$GREEN"
+		fi
 
+		if [ $del -gt 0 ] ; then 
+		    del="$HRED$del$GREEN"
+		else
+		    del="$NOC$del$GREEN"
+		fi
+
+		if [ $stash -gt 0 ] ; then 
+		    stash=" ${AZURE}S: $RED$stash$GREEN"
+		else
+		    stash=""
+		fi
+
+		repo=$(git branch | grep -e "^\*"| awk '{print $2}')
+		gitpart="\n$GREEN(GIT: $HBLUE$repo$GREEN | M: $mod A: $add D: $del$stash$rstat)"
+
+	    fi
     fi
 
     if [[ "$USER" != "root" ]] ; then 
