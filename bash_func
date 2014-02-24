@@ -1,0 +1,94 @@
+
+function __ebcd {
+    if [[ $1 != '' ]] ; then
+        _e_to_pwd=$1
+    else
+        _e_to_pwd=$_e_old_pwd
+    fi
+
+    export _e_old_pwd=$(pwd)
+    cd $_e_to_pwd
+}
+
+function __emkcd {
+    mkdir $1 && __ebcd $1
+}
+
+function hr {
+    _e_i=$(tput cols)
+    while (( $((_e_i--)) > 0 )) ; do
+        echo -n '-'
+    done
+}
+
+function create_prompt {
+
+    gitpart=""
+    
+    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
+
+	stash=$(git stash list | wc -l)
+	mod=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.M"|wc -l)
+	add=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^A"|wc -l)
+	del=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
+	
+	#git status local vs remote
+	status=$(git status | grep -e "^# Your branch is")
+
+	if echo $status | grep 'ahead' > /dev/null ; then
+		num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
+		rstat=" ${AZURE}U:${HYELOW}->${HRED}$num$GREEN"
+	elif echo $status | grep 'behind' > /dev/null ; then
+		num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
+		rstat=" ${AZURE}U:${HYELOW}<-${HRED}$num$GREEN"
+	else
+	    	rstat=""
+	fi
+
+	if [ $mod -gt 0 ] ; then 
+	    mod="$HRED$mod$GREEN"
+	else
+	    mod="$NOC$mod$GREEN"
+	fi
+
+	if [ $add -gt 0 ] ; then 
+	    add="$RED$add$GREEN"
+	else
+	    add="$NOC$add$DARK$GREEN"
+	fi
+
+	if [ $del -gt 0 ] ; then 
+	    del="$HRED$del$GREEN"
+	else
+	    del="$NOC$del$GREEN"
+	fi
+
+	if [ $stash -gt 0 ] ; then 
+	    stash=" ${AZURE}S: $RED$stash$GREEN"
+	else
+	    stash=""
+	fi
+
+	repo=$(git branch | grep -e "^\*"| awk '{print $2}')
+	gitpart="\n$GREEN(GIT: $HBLUE$repo$GREEN | M: $mod A: $add D: $del$stash$rstat)"
+
+    fi
+
+    if [[ "$USER" != "root" ]] ; then 
+	    COLORPS=$RED
+    else
+	    COLORPS=$GREEN
+    fi
+
+    SMAJL="\`if [ \$? = 0 ]; then echo -e '$GREEN:)'; else echo -e '$RED:('; fi\`"
+    PS1="$COLORPS\u@\h:$HBLUE\w$gitpart$COLORPS\$ $SMAJL$NOC "
+
+}
+
+function git-prompt-disable {
+    export PROMPT_COMMAND=""
+}
+
+function git-prompt-enable {
+    export PROMPT_COMMAND="create_prompt"
+}
