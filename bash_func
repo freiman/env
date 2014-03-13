@@ -29,6 +29,7 @@ function create_prompt {
 
 	    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
 
+		toplevel="$(git rev-parse --show-toplevel)"
 		stash=$(git stash list | wc -l)
 		git_status_short=$(git status -s --porcelain)
 		stmod=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^M"|wc -l)
@@ -40,6 +41,9 @@ function create_prompt {
 		remote=$(git remote -v)
 		git_status=$(git status | grep -e "^# Your branch is")
 		local_branch=$(git branch | grep -e "^\*"| cut -d' ' -f2-)
+		git_submodule=$(cd $toplevel && git submodule status 2>/dev/null)
+		submodules=$(echo -e "$git_submodule" |egrep -v "^$"| wc -l)
+		submodules_changed=$(echo -e "$git_submodule" |egrep -v "^$"|egrep "^\+"| wc -l)
 
 		if echo $git_status | grep 'ahead' > /dev/null ; then
 
@@ -70,7 +74,7 @@ function create_prompt {
 		fi
 
 		if [ $stmod -gt 0 ] ; then
-                    mod="$mod/$HRED$stmod$GREEN"
+                    mod="$mod$BLUE/$GREEN$stmod$GREEN"
                 fi
 
 		if [ $add -gt 0 ] ; then 
@@ -86,7 +90,7 @@ function create_prompt {
 		fi
 
                 if [ $stdel -gt 0 ] ; then
-                    del="$del/$HRED$stdel$GREEN"
+                    del="$del$BLUE/$GREEN$stdel$GREEN"
                 fi
 
                 if [ $unt -gt 0 ] ; then
@@ -101,7 +105,17 @@ function create_prompt {
 		    stash=""
 		fi
 
-		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$stash$GREEN | $rstat)"
+                if [ $submodules -gt 0 ] ; then
+                    submodules="${GREEN} | SU: $BLUE$submodules$GREEN"
+                else
+                    submodules=""
+                fi
+
+                if [ $submodules_changed -gt 0 ] ; then
+                    submodules="$submodules/$HRED$submodules_changed$GREEN"
+                fi
+
+		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$stash$GREEN | $rstat$submodules)"
 
 #	    fi
     fi
