@@ -43,6 +43,16 @@ if [ -e $DROPBOX_DIR/env/ ]; then
 	secure_create_symlink $DROPBOX_DIR/env/bash_func ~/.bash_func
 	secure_create_symlink $DROPBOX_DIR/env/vimrc ~/.vimrc
 	secure_create_symlink $DROPBOX_DIR/env/bin/ ~/bin
+	secure_create_symlink $DROPBOX_DIR/Music/ ~/Music
+	secure_create_symlink $DROPBOX_DIR/Pictures/ ~/Pictures
+	secure_create_symlink $DROPBOX_DIR/Documents/ ~/Documents
+	secure_create_symlink $DROPBOX_DIR/Videos/ ~/Videos
+	secure_create_symlink $DROPBOX_DIR/NetBeansProjects/ ~/NetBeansProjects
 
 fi
 
+if [ ! -d ~/Software/ ]; then
+
+	mkdir ~/Software/
+
+fi

@@ -25,60 +25,89 @@ function create_prompt {
 
     gitpart=""
 
-	if [[ ! "$PWD/" =~ /buildsystem-tags/ ]]; then
+#	if [[ ! "$PWD/" =~ /bs-tags/src ]]; then
 
 	    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
 
 		stash=$(git stash list | wc -l)
-		mod=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.M"|wc -l)
-		add=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^A"|wc -l)
-		del=$(git status -s --porcelain | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
+		git_status_short=$(git status -s --porcelain)
+		stmod=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^M"|wc -l)
+		mod=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^.M"|wc -l)
+		add=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^A"|wc -l)
+		stdel=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^D"|wc -l)
+		del=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
+		unt=$(echo -e "$git_status_short" | egrep "^\?\?" |wc -l)
+		remote=$(git remote -v)
+		git_status=$(git status | grep -e "^# Your branch is")
+		local_branch=$(git branch | grep -e "^\*"| cut -d' ' -f2-)
 
-		#git status local vs remote
-		status=$(git status | grep -e "^# Your branch is")
+		if echo $git_status | grep 'ahead' > /dev/null ; then
 
-		if echo $status | grep 'ahead' > /dev/null ; then
-			num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
-			rstat=" ${AZURE}U:${HYELOW}->${HRED}$num$GREEN"
-		elif echo $status | grep 'behind' > /dev/null ; then
-			num=$(echo $status | sed -n 's/.*by\s\([0-9]\+\)\scommit.*/\1/p')
-			rstat=" ${AZURE}U:${HYELOW}<-${HRED}$num$GREEN"
+			remote_name=$(echo $git_status | sed -n "s~.*'\(\S\+\)/\S\+'\s.*~\1~p")
+			remote_branch=$(echo $git_status | sed -n "s~.*'\S\+/\(\S\+\)'\s.*~\1~p")
+			num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
+			remote_full_name=$(echo $remote | grep $remote_name | grep "(push)" | awk '{print $2}')
+			rstat="${AZURE}$local_branch${HYELOW}-${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
+
+		elif echo $git_status | grep 'behind' > /dev/null ; then
+
+                        remote_name=$(echo $git_status | sed -n "s~.*'\(\S\+\)/\S\+'\s.*~\1~p")
+                        remote_branch=$(echo $git_status | sed -n "s~.*'\S\+/\(\S\+\)'\s.*~\1~p")
+                        num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
+                        remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
+                        rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num${HYELOW}-${AZURE}$remote_full_name~$remote_branch$GREEN"
+
 		else
-		    	rstat=""
+
+		    	rstat="$AZURE$branch$GREEN"
+
 		fi
 
 		if [ $mod -gt 0 ] ; then 
-		    mod="$HRED$mod$GREEN"
+		    mod="$RED$mod$GREEN"
 		else
 		    mod="$NOC$mod$GREEN"
 		fi
 
+		if [ $stmod -gt 0 ] ; then
+                    mod="$mod/$HRED$stmod$GREEN"
+                fi
+
 		if [ $add -gt 0 ] ; then 
-		    add="$RED$add$GREEN"
+		    add="$HRED$add$GREEN"
 		else
 		    add="$NOC$add$DARK$GREEN"
 		fi
 
 		if [ $del -gt 0 ] ; then 
-		    del="$HRED$del$GREEN"
+		    del="$RED$del$GREEN"
 		else
 		    del="$NOC$del$GREEN"
 		fi
 
+                if [ $stdel -gt 0 ] ; then
+                    del="$del/$HRED$stdel$GREEN"
+                fi
+
+                if [ $unt -gt 0 ] ; then
+                    unt="$RED$unt$GREEN"
+                else
+                    unt="$NOC$unt$GREEN"
+                fi
+
 		if [ $stash -gt 0 ] ; then 
-		    stash=" ${AZURE}S: $RED$stash$GREEN"
+		    stash=" ${GREEN}S: $RED$stash$GREEN"
 		else
 		    stash=""
 		fi
 
-		repo=$(git branch | grep -e "^\*"| awk '{print $2}')
-		gitpart="\n$GREEN(GIT: $HBLUE$repo$GREEN | M: $mod A: $add D: $del$stash$rstat)"
+		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$stash$GREEN | $rstat)"
 
-	    fi
+#	    fi
     fi
 
     if [[ "$USER" != "root" ]] ; then 
-	    COLORPS=$RED
+	    COLORPS=$HRED
     else
 	    COLORPS=$GREEN
     fi
