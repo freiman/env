@@ -37,5 +37,5 @@ fi
 
 if [ -f ~/.bash_func ]; then
     . ~/.bash_func
-    create_prompt
+    export PROMPT_COMMAND="create_prompt"
 fi
