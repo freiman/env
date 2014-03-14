@@ -43,3 +43,10 @@ alias gremovehooks='rm .git/hooks/*'
 
 #others
 alias doc='docker'
+
+#GUI
+alias odir='nautilus'
+
+#work
+alias mgm='ssh root@management.ls.intra'
+alias logserver='ssh -p 2222 lslog@logserver.edrive-hosting.cz'

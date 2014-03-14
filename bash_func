@@ -25,7 +25,7 @@ function create_prompt {
 
     gitpart=""
 
-#	if [[ ! "$PWD/" =~ /bs-tags/src ]]; then
+	if [[ $GIT_PROMPT -eq 1 ]]; then
 
 	    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
 
@@ -63,7 +63,7 @@ function create_prompt {
 
 		else
 
-		    	rstat="$AZURE$branch$GREEN"
+		    	rstat="$AZURE$local_branch$GREEN"
 
 		fi
 
@@ -117,7 +117,7 @@ function create_prompt {
 
 		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$stash$GREEN | $rstat$submodules)"
 
-#	    fi
+	    fi
     fi
 
     if [[ "$USER" != "root" ]] ; then 
@@ -132,9 +132,15 @@ function create_prompt {
 }
 
 function git-prompt-disable {
-    export PROMPT_COMMAND=""
+    export GIT_PROMPT=0
+    create_prompt
 }
 
 function git-prompt-enable {
-    export PROMPT_COMMAND="create_prompt"
+    export GIT_PROMPT=1
+    create_prompt
+}
+
+function ordir {
+    nautilus sftp://$1
 }
