@@ -38,4 +38,5 @@ fi
 if [ -f ~/.bash_func ]; then
     . ~/.bash_func
     export PROMPT_COMMAND="create_prompt"
+    git-prompt-enable
 fi
