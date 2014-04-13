@@ -20,6 +20,38 @@ function hr {
     done
 }
 
+function colors256 {
+
+	for fgbg in 38 48 ; do #Foreground/Background
+		for color in {0..256} ; do #Colors
+			#Display the color
+			echo -en "\e[${fgbg};5;${color}m ${color}\t\e[0m"
+			#Display 10 colors per lines
+			if [ $((($color + 1) % 10)) == 0 ] ; then
+				echo #New line
+			fi
+		done
+		echo #New line
+	done
+
+}
+
+function colors16 {
+
+	for clbg in {40..47} {100..107} 49 ; do
+		#Foreground
+		for clfg in {30..37} {90..97} 39 ; do
+			#Formatting
+			for attr in 0 1 2 4 5 7 ; do
+				#Print the result
+				echo -en "\e[${attr};${clbg};${clfg}m ^[${attr};${clbg};${clfg}m \e[0m"
+			done
+			echo #Newline
+		done
+	done
+
+}
+
 function create_prompt {
 
     gitpart=""
@@ -37,6 +69,8 @@ function create_prompt {
 		stdel=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^D"|wc -l)
 		del=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
 		unt=$(echo -e "$git_status_short" | egrep "^\?\?" |wc -l)
+		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
+		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
 		remote=$(git remote -v)
 		git_status=$(git status | grep -e "^# Your branch is")
 		local_branch=$(git branch | grep -e "^\*"| cut -d' ' -f2-)
@@ -104,6 +138,12 @@ function create_prompt {
 		    stash=""
 		fi
 
+                if [ $ren -gt 0 ] ; then
+                    ren=" ${GREEN}R: $HGREEN$ren$GREEN"
+                else
+                    ren=""
+                fi
+
                 if [ $submodules -gt 0 ] ; then
                     submodules="${GREEN} | SU: $BLUE$submodules$GREEN"
                 else
@@ -114,7 +154,7 @@ function create_prompt {
                     submodules="$submodules/$HRED$submodules_changed$GREEN"
                 fi
 
-		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$stash$GREEN | $rstat$submodules)"
+		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$ren$stash$GREEN | $rstat$submodules)"
 
 	    fi
     fi

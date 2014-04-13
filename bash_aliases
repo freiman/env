@@ -50,3 +50,6 @@ alias odir='nautilus'
 #work
 alias mgm='ssh root@management.ls.intra'
 alias logserver='ssh -p 2222 lslog@logserver.edrive-hosting.cz'
+
+#LDAP
+alias lskinit='/usr/bin/kinit -r 7d'
