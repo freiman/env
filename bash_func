@@ -69,6 +69,7 @@ function create_prompt {
 		stdel=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^D"|wc -l)
 		del=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
 		unt=$(echo -e "$git_status_short" | egrep "^\?\?" |wc -l)
+		unm=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^UU"|wc -l)
 		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
 		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
 		remote=$(git remote -v)
@@ -80,16 +81,16 @@ function create_prompt {
 
 		if echo $git_status | grep 'ahead' > /dev/null ; then
 
-			remote_name=$(echo $git_status | sed -n "s~.*'\(\S\+\)/\S\+'\s.*~\1~p")
-			remote_branch=$(echo $git_status | sed -n "s~.*'\S\+/\(\S\+\)'\s.*~\1~p")
+			remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
+			remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
 			num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
 			remote_full_name=$(echo $remote | grep $remote_name | grep "(push)" | awk '{print $2}')
 			rstat="${AZURE}$local_branch${HYELOW}-${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
 
 		elif echo $git_status | grep 'behind' > /dev/null ; then
 
-                        remote_name=$(echo $git_status | sed -n "s~.*'\(\S\+\)/\S\+'\s.*~\1~p")
-                        remote_branch=$(echo $git_status | sed -n "s~.*'\S\+/\(\S\+\)'\s.*~\1~p")
+                        remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
+                        remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
                         num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
                         remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
                         rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num${HYELOW}-${AZURE}$remote_full_name~$remote_branch$GREEN"
@@ -132,6 +133,12 @@ function create_prompt {
                     unt="$NOC$unt$GREEN"
                 fi
 
+                if [ $unm -gt 0 ] ; then
+                    unm=" ${GREEN}UU: $RED$unm$GREEN"
+                else
+                    unm=""
+                fi
+
 		if [ $stash -gt 0 ] ; then 
 		    stash=" ${GREEN}S: $RED$stash$GREEN"
 		else
@@ -154,7 +161,7 @@ function create_prompt {
                     submodules="$submodules/$HRED$submodules_changed$GREEN"
                 fi
 
-		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$ren$stash$GREEN | $rstat$submodules)"
+		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$unm$ren$stash$GREEN | $rstat$submodules)"
 
 	    fi
     fi
