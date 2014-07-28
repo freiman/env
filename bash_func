@@ -73,7 +73,7 @@ function create_prompt {
 		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
 		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
 		remote=$(git remote -v)
-		git_status=$(git status | grep -e "^# Your branch is")
+		git_status=$(git status | grep -A1 -e "Your branch")
 		local_branch=$(git branch | grep -e "^\*"| cut -d' ' -f2-)
 		git_submodule=$(cd $toplevel && git submodule status 2>/dev/null)
 		submodules=$(echo -e "$git_submodule" |egrep -v "^$"| wc -l)
@@ -94,6 +94,15 @@ function create_prompt {
                         num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
                         remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
                         rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num${HYELOW}-${AZURE}$remote_full_name~$remote_branch$GREEN"
+
+		elif echo $git_status | grep 'different commits' > /dev/null ; then
+
+                        remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
+                        remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
+                        num=$(echo $git_status | sed -n "s~.*and\shave\s\([0-9]\+\)\sand.*~\1~p")
+			num2=$(echo $git_status | sed -n "s~.*and\shave\s[0-9]\+\sand\s\([0-9]\+\)\sdifferent.*~\1~p")
+                        remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
+                        rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num${HYELOW}/${HRED}$num2${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
 
 		else
 
