@@ -52,6 +52,17 @@ function colors16 {
 
 }
 
+function sshp {
+	if ! /usr/bin/klist -s &> /dev/null; then
+		/usr/bin/kinit -r 7d -fp $USER
+	fi
+	ssh $1.ls.intra
+}
+
+function ssho {
+        ssh root@$1.livesport.intra
+}
+
 function create_prompt {
 
     gitpart=""
@@ -102,11 +113,23 @@ function create_prompt {
                         num=$(echo $git_status | sed -n "s~.*and\shave\s\([0-9]\+\)\sand.*~\1~p")
 			num2=$(echo $git_status | sed -n "s~.*and\shave\s[0-9]\+\sand\s\([0-9]\+\)\sdifferent.*~\1~p")
                         remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
-                        rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num${HYELOW}/${HRED}$num2${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
+                        rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num2${HYELOW}/${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
 
 		else
 
-		    	rstat="$AZURE$local_branch$GREEN"
+			if [ $(git log --branches --not --remotes --oneline | wc -l) -gt 0 ]; then
+
+				remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
+				remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
+				num=$(git log --branches --not --remotes --oneline | wc -l)
+				remote_full_name=$(echo $remote | grep $remote_name &>/dev/null | grep "(fetch)" | awk '{print $2}')
+				rstat="${AZURE}$local_branch${HYELOW}-${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
+
+			else
+
+			    	rstat="$AZURE$local_branch$GREEN"
+
+			fi
 
 		fi
 
