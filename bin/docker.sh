@@ -1,1 +1,0 @@
-/home/freiman/git/tools/docker/bin/docker.sh

@@ -60,163 +60,107 @@ function sshp {
 }
 
 function ssho {
-        ssh root@$1.livesport.intra
+	ssh root@$1.livesport.intra
 }
 
 function create_prompt {
 
-    gitpart=""
+	git_part=""
 
-	if [[ $GIT_PROMPT -eq 1 ]]; then
+	if [[ $GIT_PROMPT -eq 1 ]] && git rev-parse --git-dir &>/dev/null; then
 
-	    if git ls-files ./ --error-unmatch >/dev/null 2>/dev/null ; then
+		declare -A git_counters
+		git_counters_part=""
+		git_rem_loc_br_part=""
+		git_submodules_part=""
 
-		toplevel="$(git rev-parse --show-toplevel)"
-		stash=$(git stash list | wc -l)
-		git_status_short=$(git status -s --porcelain)
-		stmod=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^M"|wc -l)
-		mod=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^.M"|wc -l)
-		add=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^A"|wc -l)
-		stdel=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^D"|wc -l)
-		del=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^.D"|wc -l)
-		unt=$(echo -e "$git_status_short" | egrep "^\?\?" |wc -l)
-		unm=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^UU"|wc -l)
-		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
-		ren=$(echo -e "$git_status_short" | egrep -v "^\?\?"| grep -e "^R"|wc -l)
-		remote=$(git remote -v)
-		git_status=$(git status | grep -A1 -e "Your branch")
-		local_branch=$(git branch | grep -e "^\*"| cut -d' ' -f2-)
-		git_submodule=$(cd $toplevel && git submodule status 2>/dev/null)
-		submodules=$(echo -e "$git_submodule" |egrep -v "^$"| wc -l)
-		submodules_changed=$(echo -e "$git_submodule" |egrep -v "^$"|egrep "^\+"| wc -l)
+		git_toplevel=$(git rev-parse --show-toplevel)
+		git_status=$(git status --short --porcelain --branch)
+		git_stash_count=$(git stash list | wc --lines)
+		git_submodule=$(cd $git_toplevel && git submodule status 2>/dev/null)
+		git_submodules_count=$(echo -e "$git_submodule" | egrep -v "^$" | wc -l)
+		git_submodules_changed_count=$(echo -e "$git_submodule" |egrep -v "^$"|egrep "^\+" | wc -l)
 
-		if echo $git_status | grep 'ahead' > /dev/null ; then
+		for type in A MM DD CC RR U TT \?; do
 
-			remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
-			remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
-			num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
-			remote_full_name=$(echo $remote | grep $remote_name | grep "(push)" | awk '{print $2}')
-			rstat="${AZURE}$local_branch${HYELOW}-${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
+			char=${type:0:1}
 
-		elif echo $git_status | grep 'behind' > /dev/null ; then
+			staged=$(echo -e "$git_status" | grep -c "^$char")
 
-                        remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
-                        remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
-                        num=$(echo $git_status | sed -n "s~.*'\S\+'\sby\s\([0-9]\+\)\scommit.*~\1~p")
-                        remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
-                        rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num${HYELOW}-${AZURE}$remote_full_name~$remote_branch$GREEN"
+			if [ ${#type} -eq 2 ]; then
 
-		elif echo $git_status | grep 'different commits' > /dev/null ; then
+				unstaged=$(echo -e "$git_status" | grep -c "^.$char")
 
-                        remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
-                        remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
-                        num=$(echo $git_status | sed -n "s~.*and\shave\s\([0-9]\+\)\sand.*~\1~p")
-			num2=$(echo $git_status | sed -n "s~.*and\shave\s[0-9]\+\sand\s\([0-9]\+\)\sdifferent.*~\1~p")
-                        remote_full_name=$(echo $remote | grep $remote_name | grep "(fetch)" | awk '{print $2}')
-                        rstat="${AZURE}$local_branch${HYELOW}<-${HRED}$num2${HYELOW}/${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
+				if [ $staged -gt 0 -o $unstaged -gt 0 ]; then
 
-		else
+					[ $unstaged -eq 0 ] && git_counters[$char]="${git_counters[$char]}$NOC" || git_counters[$char]="${git_counters[$char]}$RED"
+					git_counters[$char]="${git_counters[$char]}$unstaged"
+					[ $staged -gt 0 ] && git_counters[$char]="${git_counters[$char]}$BLUE/$HGREEN$staged"
+					git_counters[$char]="${git_counters[$char]}$GREEN"
 
-			if [ $(git log --branches --not --remotes --oneline | wc -l) -gt 0 ]; then
-
-				remote_name=$(echo $git_status | sed -n "s~.*'\([^/]\+\)/\S\+'\s.*~\1~p")
-				remote_branch=$(echo $git_status | sed -n "s~.*'[^/]\+/\(\S\+\)'\s.*~\1~p")
-				num=$(git log --branches --not --remotes --oneline | wc -l)
-				remote_full_name=$(echo $remote | grep $remote_name &>/dev/null | grep "(fetch)" | awk '{print $2}')
-				rstat="${AZURE}$local_branch${HYELOW}-${HRED}$num${HYELOW}->${AZURE}$remote_full_name~$remote_branch$GREEN"
-
+				fi
 			else
 
-			    	rstat="$AZURE$local_branch$GREEN"
+				if [ $staged -gt 0 ]; then
 
+					git_counters[$char]="$NOC$staged$GREEN"
+
+				fi
 			fi
+		done
+
+		if [ $git_stash_count -gt 0 ]; then
+
+			git_counters[S]="$YELLOW$git_stash_count$GREEN"
 
 		fi
 
-		if [ $mod -gt 0 ] ; then 
-		    mod="$RED$mod$GREEN"
-		else
-		    mod="$NOC$mod$GREEN"
+		for part in "${!git_counters[@]}"; do
+
+			[ "$git_counters_part" ] && git_counters_part="$git_counters_part "
+			git_counters_part="$git_counters_part$GREEN$part: ${git_counters[$part]}"
+
+		done
+
+		git_status_branch_tmp=$(echo -e "$git_status" | grep "^##")
+
+		if [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)$ ]]; then
+			git_rem_loc_br_part="${AZURE}${BASH_REMATCH[1]}$GREEN"
+		elif [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)\ \[ahead\ ([0-9]+)\]$ ]]; then
+			git_rem_loc_br_part="${AZURE}${BASH_REMATCH[1]}${HYELLOW}-${HRED}${BASH_REMATCH[4]}${HYELLOW}->${AZURE}${BASH_REMATCH[2]}~${BASH_REMATCH[3]}$GREEN"
+		elif [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)\ \[behind\ ([0-9]+)\]$ ]]; then
+			git_rem_loc_br_part="${AZURE}${BASH_REMATCH[1]}${HYELLOW}<-${HRED}${BASH_REMATCH[4]}${HYELLOW}-${AZURE}${BASH_REMATCH[2]}~${BASH_REMATCH[3]}$GREEN"
+		elif [[ "$git_status_branch_tmp" =~ ^##\ HEAD\ \(no\ branch\)$ ]]; then
+			git_rem_loc_br_part="${HRED}NO BRANCH${GREEN}"
+		elif echo "$git_status_branch_tmp" | grep 'different commits' >/dev/null; then
+			git_rem_loc_br_part="$git_local_tmp"
 		fi
 
-		if [ $stmod -gt 0 ] ; then
-                    mod="$mod$BLUE/$GREEN$stmod$GREEN"
-                fi
+		[ $git_submodules_count -gt 0 ] && git_submodules_part="${GREEN} | SU: $BLUE$git_submodules_count$GREEN"
+		[ $git_submodules_changed_count -gt 0 ] && git_submodules_part="$git_submodules_part/$HRED$git_submodules_changed_count$GREEN"
 
-		if [ $add -gt 0 ] ; then 
-		    add="$HGREEN$add$GREEN"
-		else
-		    add="$NOC$add$DARK$GREEN"
-		fi
+		git_part="\n$GREEN("
+		[ "$git_counters_part" ] && git_part="$git_part$git_counters_part | "
+		git_part="$git_part$git_rem_loc_br_part"
+		[ "$git_submodules_part" ] && git_part="$git_part$git_submodules_part"
+		git_part="$git_part)"
 
-		if [ $del -gt 0 ] ; then 
-		    del="$RED$del$GREEN"
-		else
-		    del="$NOC$del$GREEN"
-		fi
+	fi
 
-                if [ $stdel -gt 0 ] ; then
-                    del="$del$BLUE/$GREEN$stdel$GREEN"
-                fi
-
-                if [ $unt -gt 0 ] ; then
-                    unt="$RED$unt$GREEN"
-                else
-                    unt="$NOC$unt$GREEN"
-                fi
-
-                if [ $unm -gt 0 ] ; then
-                    unm=" ${GREEN}UU: $RED$unm$GREEN"
-                else
-                    unm=""
-                fi
-
-		if [ $stash -gt 0 ] ; then 
-		    stash=" ${GREEN}S: $RED$stash$GREEN"
-		else
-		    stash=""
-		fi
-
-                if [ $ren -gt 0 ] ; then
-                    ren=" ${GREEN}R: $HGREEN$ren$GREEN"
-                else
-                    ren=""
-                fi
-
-                if [ $submodules -gt 0 ] ; then
-                    submodules="${GREEN} | SU: $BLUE$submodules$GREEN"
-                else
-                    submodules=""
-                fi
-
-                if [ $submodules_changed -gt 0 ] ; then
-                    submodules="$submodules/$HRED$submodules_changed$GREEN"
-                fi
-
-		gitpart="\n$GREEN(M: $mod A: $add D: $del U: $unt$unm$ren$stash$GREEN | $rstat$submodules)"
-
-	    fi
-    fi
-
-    if [[ "$USER" != "root" ]] ; then 
-	    COLORPS=$HRED
-    else
-	    COLORPS=$GREEN
-    fi
-
-    SMAJL="\`if [ \$? = 0 ]; then echo -e '$GREEN:)'; else echo -e '$RED:('; fi\`"
-    PS1="$COLORPS\u@\h:$HBLUE\w$gitpart$COLORPS\$ $SMAJL$NOC "
+	if sudo -n -v &>/dev/null; then COLORPS=$HGREEN; else COLORPS=$HRED; fi
+	exit_code_prompt="\`if [ \$? -eq 0 ]; then echo -e '$GREEN\$'; else echo -e '$RED\$'; fi\`"
+	PS1="$COLORPS\u@$COLORPS\h:$HBLUE\w$git_part$COLORPS$exit_code_prompt$NOC "
 
 }
 
 function git-prompt-disable {
-    export GIT_PROMPT=0
+	export GIT_PROMPT=0
 }
 
 function git-prompt-enable {
-    export GIT_PROMPT=1
+	export GIT_PROMPT=1
 }
 
 function ordir {
-    nautilus sftp://$1
+	nautilus sftp://$1
 }

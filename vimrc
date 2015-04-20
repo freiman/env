@@ -155,7 +155,7 @@ if has("gui_running")
     " colorscheme jellybeans
     " colorscheme xoria256
     " colorscheme wombat256
-    colorscheme desertEx
+    colorscheme molokai
 
     " Set gvim options
     set guioptions-=m
@@ -172,7 +172,7 @@ if has("gui_running")
     " cd ~/wwwroot/
 else
     if &t_Co == 256
-        colorscheme desertEx
+        colorscheme molokai
     endif
 endif
 

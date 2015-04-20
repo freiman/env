@@ -55,6 +55,7 @@ alias odir='nautilus'
 #work
 alias mgm='ssh root@management.ls.intra'
 alias logserver='ssh -p 2222 lslog@logserver.edrive-hosting.cz'
+alias gitolite='ssh git@git.livesport.eu'
 
 #LDAP
 alias lskinit='/usr/bin/kinit -r 7d'
