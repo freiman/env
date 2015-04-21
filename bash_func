@@ -77,6 +77,7 @@ function create_prompt {
 		git_toplevel=$(git rev-parse --show-toplevel)
 		git_status=$(git status --short --porcelain --branch)
 		git_stash_count=$(git stash list | wc --lines)
+		git_remote=$(git remote --verbose)
 		git_submodule=$(cd $git_toplevel && git submodule status 2>/dev/null)
 		git_submodules_count=$(echo -e "$git_submodule" | egrep -v "^$" | wc -l)
 		git_submodules_changed_count=$(echo -e "$git_submodule" |egrep -v "^$"|egrep "^\+" | wc -l)
@@ -124,16 +125,45 @@ function create_prompt {
 
 		git_status_branch_tmp=$(echo -e "$git_status" | grep "^##")
 
-		if [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)$ ]]; then
-			git_rem_loc_br_part="${AZURE}${BASH_REMATCH[1]}$GREEN"
-		elif [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)\ \[ahead\ ([0-9]+)\]$ ]]; then
-			git_rem_loc_br_part="${AZURE}${BASH_REMATCH[1]}${HYELLOW}-${HRED}${BASH_REMATCH[4]}${HYELLOW}->${AZURE}${BASH_REMATCH[2]}~${BASH_REMATCH[3]}$GREEN"
-		elif [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)\ \[behind\ ([0-9]+)\]$ ]]; then
-			git_rem_loc_br_part="${AZURE}${BASH_REMATCH[1]}${HYELLOW}<-${HRED}${BASH_REMATCH[4]}${HYELLOW}-${AZURE}${BASH_REMATCH[2]}~${BASH_REMATCH[3]}$GREEN"
-		elif [[ "$git_status_branch_tmp" =~ ^##\ HEAD\ \(no\ branch\)$ ]]; then
-			git_rem_loc_br_part="${HRED}NO BRANCH${GREEN}"
-		elif echo "$git_status_branch_tmp" | grep 'different commits' >/dev/null; then
-			git_rem_loc_br_part="$git_local_tmp"
+		if [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)\ ?(\[.*\])?$ ]]; then
+
+			git_local_branch="${BASH_REMATCH[1]}"
+			git_remote_name="${BASH_REMATCH[2]}"
+			git_remote_branch="${BASH_REMATCH[3]}"
+			git_ahead_behind="${BASH_REMATCH[4]}"
+			git_ahead_count=""
+			git_behind_count=""
+
+			if [ "$git_ahead_behind" ]; then
+
+				if [[ "$git_ahead_behind" =~ ^\[ahead\ ([0-9]+)\]$ ]]; then
+
+					git_ahead_count="${BASH_REMATCH[1]}"
+
+				elif [[ "$git_ahead_behind" =~ ^\[behind\ ([0-9]+)\]$ ]]; then
+
+					git_behind_count="${BASH_REMATCH[1]}"
+
+				elif [[ "$git_ahead_behind" =~ ^\[ahead\ ([0-9]+),\ behind\ ([0-9]+)\]$ ]]; then
+
+					git_ahead_count="${BASH_REMATCH[1]}"
+					git_behind_count="${BASH_REMATCH[2]}"
+
+				fi
+			fi
+
+			git_remote_long_name=$(echo -e "$git_remote" | egrep "^$git_remote_name\s" | awk '{print $2}' | uniq | head -1)
+
+			if [ "$git_ahead_count" -a "$git_behind_count" ]; then git_ahead_behind_arrow="$HYELLOW<-$HRED$git_behind_count$AZURE/$HRED$git_ahead_count$HYELLOW->$AZURE";
+			elif [ "$git_ahead_count" ]; then git_ahead_behind_arrow="$HYELLOW-$HRED$git_ahead_count$HYELLOW->$AZURE";
+			elif [ "$git_behind_count" ]; then git_ahead_behind_arrow="$HYELLOW<-$HRED$git_behind_count$HYELLOW-$AZURE";
+			else git_ahead_behind_arrow="$HYELLOW=$AZURE";
+			fi
+
+			git_rem_loc_br_part="$AZURE$git_local_branch$git_ahead_behind_arrow$git_remote_long_name~$git_remote_branch$GREEN"
+
+		elif [[ "$git_status_branch_tmp" =~ ^##\ HEAD\ \((.*)\)$ ]]; then
+			git_rem_loc_br_part="$HRED${BASH_REMATCH[1]}$GREEN"
 		fi
 
 		[ $git_submodules_count -gt 0 ] && git_submodules_part="${GREEN} | SU: $BLUE$git_submodules_count$GREEN"
