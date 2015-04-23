@@ -125,7 +125,7 @@ function create_prompt {
 
 		git_status_branch_tmp=$(echo -e "$git_status" | grep "^##")
 
-		if [[ "$git_status_branch_tmp" =~ ^##\ ([a-zA-Z0-9]+)...([a-zA-Z0-9]+)/([a-zA-Z0-9]+)\ ?(\[.*\])?$ ]]; then
+		if [[ "$git_status_branch_tmp" =~ ^##\ (.+)\.\.\.([^/]+)/([^\ ]+)\ ?(\[.*\])?$ ]]; then
 
 			git_local_branch="${BASH_REMATCH[1]}"
 			git_remote_name="${BASH_REMATCH[2]}"
@@ -162,8 +162,10 @@ function create_prompt {
 
 			git_rem_loc_br_part="$AZURE$git_local_branch$git_ahead_behind_arrow$git_remote_long_name~$git_remote_branch$GREEN"
 
-		elif [[ "$git_status_branch_tmp" =~ ^##\ HEAD\ \((.*)\)$ ]]; then
-			git_rem_loc_br_part="$HRED${BASH_REMATCH[1]}$GREEN"
+		elif [[ "$git_status_branch_tmp" =~ ^##\ H?E?A?D?\ ?\(?(.*)\)?$ ]]; then
+
+			git_rem_loc_br_part="$AZURE${BASH_REMATCH[1]}$GREEN"
+
 		fi
 
 		[ $git_submodules_count -gt 0 ] && git_submodules_part="${GREEN} | SU: $BLUE$git_submodules_count$GREEN"
