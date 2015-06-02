@@ -181,7 +181,8 @@ function create_prompt {
 
 	if sudo -n -v &>/dev/null; then COLORPS=$HGREEN; else COLORPS=$HRED; fi
 	exit_code_prompt="\`if [ \$? -eq 0 ]; then echo -e '$GREEN\$'; else echo -e '$RED\$'; fi\`"
-	PS1="$COLORPS\u@$COLORPS\h:$HBLUE\w$git_part$COLORPS$exit_code_prompt$NOC "
+	time=$(date "+%H:%M:%S")
+	PS1="$COLORPS\u@$COLORPS\h:$HBLUE\w$HYELLOW ($time) $NOC$git_part$COLORPS$exit_code_prompt$NOC "
 
 }
 

@@ -19,17 +19,21 @@ export PATH="${PATH}:/usr/local/edrive/sbin/:~/bin:~/git/bdsm/bin"
 
 #colors
 
-export TPUT_BLACK="$(tput setaf 0)"
-export TPUT_RED="$(tput setaf 1)"
-export TPUT_GREEN="$(tput setaf 2)"
-export TPUT_YELLOW="$(tput setaf 3)"
-export TPUT_BLUE="$(tput setaf 4)"
-export TPUT_MAGENTA="$(tput setaf 5)"
-export TPUT_CYAN="$(tput setaf 6)"
-export TPUT_WHITE="$(tput setaf 7)"
-export TPUT_BOLD="$(tput bold)"
-export TPUT_INVERSE="$(tput rev)"
-export TPUT_RESET="$(tput sgr0)"
+if [[ $- == *i* ]]; then
+
+	export TPUT_BLACK="$(tput setaf 0)"
+	export TPUT_RED="$(tput setaf 1)"
+	export TPUT_GREEN="$(tput setaf 2)"
+	export TPUT_YELLOW="$(tput setaf 3)"
+	export TPUT_BLUE="$(tput setaf 4)"
+	export TPUT_MAGENTA="$(tput setaf 5)"
+	export TPUT_CYAN="$(tput setaf 6)"
+	export TPUT_WHITE="$(tput setaf 7)"
+	export TPUT_BOLD="$(tput bold)"
+	export TPUT_INVERSE="$(tput rev)"
+	export TPUT_RESET="$(tput sgr0)"
+
+fi
 
 export NOC="\[[0m\]"
 export WHITE="\[[1m\]"
