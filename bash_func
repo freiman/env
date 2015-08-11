@@ -1,23 +1,20 @@
 function __ebcd {
-    if [[ $1 != '' ]] ; then
-        _e_to_pwd=$1
-    else
-        _e_to_pwd=$_e_old_pwd
-    fi
-
-    export _e_old_pwd=$(pwd)
-    cd $_e_to_pwd
+	if [[ $1 != '' ]] ; then
+		_e_to_pwd=$1
+	else
+		_e_to_pwd=$_e_old_pwd
+	fi
+	export _e_old_pwd=$(pwd)
+	cd $_e_to_pwd
 }
 
 function __emkcd {
-    mkdir $1 && __ebcd $1
+	mkdir $1 && __ebcd $1
 }
 
 function hr {
-    _e_i=$(tput cols)
-    while (( $((_e_i--)) > 0 )) ; do
-        echo -n '-'
-    done
+	_e_i=$(tput cols)
+	while (( $((_e_i--)) > 0 )); do echo -n '-'; done
 }
 
 function colors256 {
@@ -53,14 +50,24 @@ function colors16 {
 }
 
 function sshp {
-	if ! /usr/bin/klist -s &> /dev/null; then
-		/usr/bin/kinit -r 7d -fp $USER
+	if ping -c1 $1.ls.intra &>/dev/null; then
+		if ! /usr/bin/klist -s &>/dev/null; then
+			if ! /usr/bin/kinit -r 7d -fp $USER; then
+				return 1
+			fi
+		fi
+		ssh $1.ls.intra
+	else
+		echo Production server \'$1\' is not reachable!
 	fi
-	ssh $1.ls.intra
 }
 
 function ssho {
-	ssh root@$1.livesport.intra
+	if ping -c1 $1.livesport.intra &>/dev/null; then
+		ssh root@$1.livesport.intra
+	else
+		echo Office server \'$1\' is not reachable!
+	fi
 }
 
 function create_prompt {
