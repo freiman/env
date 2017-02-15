@@ -2,11 +2,11 @@
 
 function secure_create_symlink {
 
-        if [ -e $2 ]; then
+	if [ -e $2 ]; then
 
 		if [ ! -L $2 ]; then
 
-                	echo backup $2 to $2.backup
+			echo backup $2 to $2.backup
 			mv $2 $2.backup
 
 		else
@@ -19,9 +19,20 @@ function secure_create_symlink {
 
 		fi
 
-        fi
+	fi
 
 	ln -sf $1 $2
+
+}
+
+function secure_content_symlink {
+
+	for dir in $(find $DROPBOX_DIR/UbuntuHomeDir/$1 -mindepth 1 -maxdepth 1); do
+
+		CONTENT=${dir/$DROPBOX_DIR\/UbuntuHomeDir\/$1\//}
+		secure_create_symlink $DROPBOX_DIR/UbuntuHomeDir/$1/$CONTENT ~/$2/$CONTENT
+
+	done
 
 }
 
@@ -48,6 +59,7 @@ if [ -e $DROPBOX_DIR/env/ ]; then
 	secure_create_symlink $DROPBOX_DIR/Documents/ ~/Documents
 	secure_create_symlink $DROPBOX_DIR/Videos/ ~/Videos
 	secure_create_symlink $DROPBOX_DIR/NetBeansProjects/ ~/NetBeansProjects
+	secure_content_symlink config .config
 
 fi
 

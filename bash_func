@@ -80,7 +80,9 @@ function create_prompt {
 		git_counters_part=""
 		git_rem_loc_br_part=""
 		git_submodules_part=""
+		git_tags_part=""
 
+		git_commit_hash=$(git rev-parse HEAD)
 		git_toplevel=$(git rev-parse --show-toplevel)
 		git_status=$(git status --short --porcelain --branch)
 		git_stash_count=$(git stash list | wc --lines)
